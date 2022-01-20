@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/all.css">
+    
+</head>
+<body>
+    <main class="main">
+        <header class="header">
+            <audio id="audio-element" src="https://raw.githubusercontent.com/himalayasingh/music-player-1/master/music/2.mp3" style="width: 500px"></audio>
+            <audio id="audio_drum" src="./asset/audio/vintage-pack-tom_G_minor.wav"></audio>
+            <!-- <p class="game_score">0</p> -->
+        </header>
+        <div class="game_start">
+            <h1>節奏遊戲</h1>
+            <div class="btn_row">
+                <button class="start_btn btn">Start</button>
+                <button class="desc_btn btn">?</button>
+            </div>
+            <div class="game_desc hide">
+                <h2>遊戲說明</h2>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequatur fugit voluptate iste necessitatibus culpa ipsum repellendus porro vero accusamus? Aliquid, enim dignissimos suscipit blanditiis illo ratione sint, dolorum autem nesciunt facere adipisci! Consequuntur ab voluptates tenetur ad voluptatum obcaecati animi enim a laudantium. Qui sed eos earum deleniti! Sit, placeat.</p>
+                <a href="#" class="desc_close">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+        <p class="fail_label hit_label">miss</p>
+        <p class="success_label hit_label">success</p>
+        <div class="game_over hide">
+            <h2>總分: <span class="total_score">0</span></h2>
+            <ul class="score_row">
+                <li>
+                    <h3>總資料</h3>
+                    <p>success: <span class="total_success_count">0</span></p>
+                    <p>Miss: <span class="total_miss_count">0</span></p>
+                    <p>總步數: <span class="total_step_count">0</span></p>
+                    <p>總命中率: <span class="total_hit_rate">0</span> %</p>
+                </li>
+                <li>
+                    <h3>命中率</h3>
+                    <p>左腳: <span class="left_hit_rate">0</span> %</p>
+                    <p>右腳: <span class="right_hit_rate">0</span> %</p>
+                </li>
+                <li>
+                    <h3>步數</h3>
+                    <p>左腳: <span class="left_step_count">0</span></p>
+                    <p>右腳: <span class="right_step_count">0</span></p>
+                </li>
+                <li>
+                    <h3>Success</h3>
+                    <p>左腳: <span class="left_success_count">0</span></p>
+                    <p>右腳: <span class="right_success_count">0</span></p>
+                </li>
+                <li>
+                    <h3>Miss</h3>
+                    <p>左腳: <span class="left_miss_count">0</span></p>
+                    <p>右腳: <span class="right_miss_count">0</span> </p>
+                </li>
+            </ul>
+            <p>遊戲時間: <span class="total_game_time">0</span></p>
+        </div>
+    </main>
+    
+    <!-- <input type="file" name="inputfile" id="inputfile"> -->
+</body>
+<script type="module">
+    import * as THREE from "https://cdn.skypack.dev/three@0.120.0";
+    import {OrbitControls} from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
+
+    const main = document.querySelector('.main');
+    const fail_label = document.querySelector('.fail_label');
+    const success_label = document.querySelector('.success_label');
+    const start_btn = document.querySelector('.start_btn');
+    let leftStatus = false;
+    let rightStatus = false;
+    let cube_count = 0;
+    const x_distance = 6;
+    const terminal_point = 40;
+    const hit_point = 36;
+    const temple_report = [];
+
+    console.clear();
+    
+    // user data
+    const user = {
+        date: new Date(),
+        total_hit: {
+            left: 0,
+            right: 0
+        },
+        correct_hit: {
+            left: 0,
+            right: 0
+        },
+        fail_hit: {
+            left: 0,
+            right: 0
+        },
+        total_miss:function(){
+            return this.fail_hit.left + this.fail_hit.right;
+        },
+        total_success:function(){
+            return this.correct_hit.left + this.correct_hit.right;
+        },
+        total_step:function(){
+            return this.total_hit.left + this.total_hit.right;
+        },
+        total_hit_rate:function(){
+            let hit_rate = (this.total_success() / this.total_step()) ? (this.total_success() / this.total_step()) : 0;
+            hit_rate = (hit_rate * 100).toFixed(2);
+            hit_rate  = hit_rate > 100 ? 100 : hit_rate;
+            hit_rate = hit_rate? hit_rate : 0;
+            return hit_rate;
+        },
+        left_hit_rate:function(){
+            let hit_rate = (this.correct_hit.left / this.total_hit.left) ? (this.correct_hit.left / this.total_hit.left) : 0;
+            hit_rate = (hit_rate * 100).toFixed(2);
+            hit_rate  = hit_rate > 100 ? 100 : hit_rate;
+            hit_rate = hit_rate? hit_rate : 0;
+            return hit_rate;
+        },
+        right_hit_rate:function(){
+            let hit_rate = (this.correct_hit.right / this.total_hit.right) ? (this.correct_hit.right / this.total_hit.right) : 0;
+            hit_rate = (hit_rate * 100).toFixed(2);
+            hit_rate  = hit_rate > 100 ? 100 : hit_rate;
+            hit_rate = hit_rate? hit_rate : 0;
+            return hit_rate;
+        }
+    };
+
+    const params = {
+        width: 40,
+        height: 40,
+        xVariance: 0,
+        yVariance: 0,
+        yStep0: 1,
+        yStep1: 1,
+
+        extrudeOptions: {
+            depth: 0,
+            bevelEnabled: false,
+            bevelThickness: 0.005,
+            bevelSize: 0,
+            bevelSegments: 1
+        }
+    };
+
+    function init(scene) {
+        const mainGroup = new THREE.Group();
+        mainGroup.position.set(-20, 0, 15);
+        scene.add(mainGroup);
+        const vertexLines = [];
+        for (let ri = 0; ri < params.height; ri++) {
+            vertexLines.push(buildVertexLine());
+        }
+
+        // join the lines to pairs, each pair will create a row of hexagons
+        // (could be removed for optimization)
+        const linePairs = [];
+        for (let ri = 0; ri < params.height; ri++) {
+            linePairs.push([
+            vertexLines[ri],
+            vertexLines[(ri)]
+            ]);
+        }
+
+        // iterate over the pairs of lines and create the filling hexagons between
+        // each pair
+        const rowGroups = [];
+        for (let i = 0; i < linePairs.length; i++) {
+            const [line0, line1] = linePairs[i];
+            const rowGroup = new THREE.Group();
+
+            rowGroup.position.y = getRowYPosition(i);
+
+            rowGroup.add(...getRowPrismMeshes(i, line0, line1));
+            rowGroup.add(getLineObject(linePairs[i][0]));
+            rowGroups.push(rowGroup);
+        }
+
+        mainGroup.add(...rowGroups);
+        
+        // set speed
+        const wrapYPosition = getRowYPosition(params.height);
+        return t => {
+            rowGroups.forEach((group, i) => {
+                group.position.y = (group.position.y + 0.15 + wrapYPosition) % wrapYPosition;
+            });
+        };
+    }
+    const line1Offset = new THREE.Vector3();
+
+    function getRowPrismMeshes(row, line0, line1) {
+        const meshes = [];
+        const indexOffset = row % 2;
+
+        line1Offset.y = indexOffset ? params.yStep1 : params.yStep0;
+        for (let i0 = 0; i0 < line0.length - 2; i0 += 1) {
+            const points = [
+                line1[i0].clone().add(line1Offset),
+                line1[i0 + 1].clone().add(line1Offset),
+                line1[i0 + 2].clone().add(line1Offset),
+                line0[i0 + 2],
+                line0[i0 + 1],
+                line0[i0]
+            ];
+            meshes.push(getPrismMesh(points));
+        }
+
+        return meshes;
+    }
+    
+
+    const tmpMatrix = new THREE.Matrix4();
+    function getPrismMesh(points) {
+        const geom = getExtrudeGeometry(points);
+        const mat = new THREE.MeshStandardMaterial({
+            color: 0xfffce9,
+        });
+        
+        const mesh = new THREE.Mesh(geom, mat);
+        geom.computeBoundingBox();
+        let center = new THREE.Vector3();
+        center = geom.boundingBox.getCenter(center);
+        mesh.position.copy(center);
+        tmpMatrix.makeTranslation(...center.multiplyScalar(-1).toArray());
+        geom.applyMatrix4(tmpMatrix);
+
+    return mesh;
+    }
+
+    function getExtrudeGeometry(points) {
+        const extrudeOpts = Object.assign({}, params.extrudeOptions);
+        return new THREE.ExtrudeGeometry(
+            new THREE.Shape(points), extrudeOpts);
+    }
+
+    function buildVertexLine(invertY) {
+        const displacement = new THREE.Vector3();
+        const points = [];
+        const {xVariance, yVariance} = params;
+        for (let baseX = 0; baseX < params.width; baseX++) {
+            points.push(new THREE.Vector3(baseX, 0, 0)
+                .add(displacement));
+        }
+        return points;
+    }
+
+
+    function getLineObject(points) {
+        const object = new THREE.Line(
+            new THREE.Geometry(),
+            new THREE.LineBasicMaterial({
+                    linewidth: 10,
+                    color: 0xd1bfb3,
+                }
+            ));
+
+        object.geometry.vertices = points;
+
+        return object;
+    }
+
+    function getRowYPosition(row) {
+        return Math.ceil(row / 2) * params.yStep0 +
+            Math.floor(row / 2) * params.yStep1;
+    }
+
+
+
+    // ---- boilerplate-code
+
+    // .... setup renderer
+    const renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
+    renderer.domElement.id = "mainScene";
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    // renderer.setClearColor(0x1d4167, 1);
+    // .... setup scene
+    const scene = new THREE.Scene();
+    
+    // scene.fog = new THREE.FogExp2(0xffffff, .03);
+
+    // .... setup camera and controls
+    const camera = new THREE.PerspectiveCamera(
+        110, window.innerWidth / window.innerHeight, 1, 1000);
+    // const controls = new OrbitControls(camera, renderer.domElement);
+    
+    
+
+    // camera.position.set(0, 4, 20);
+    camera.position.set(0, 50, 0);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+
+    // 物件函式------------------------------------------------
+    
+    const mesh_ary = [];
+    const collideMeshList = [];
+
+
+
+    const addCube = (x_loc, hexColor, templeTime) => {
+        const cube = new THREE.CubeGeometry( 5, 1.5, 0.5);
+        const material = new THREE.MeshPhongMaterial( { color: hexColor } );
+        let cubeMesh = new THREE.Mesh( cube, material );
+        cubeMesh.position.set(x_loc, 0, 14);
+        cubeMesh.direction = x_loc <= 0 ? 0 : 1;
+        cubeMesh.templeTime = templeTime;
+        scene.add( cubeMesh );
+        mesh_ary.push(cubeMesh);
+    }
+
+    const removeCube = (cubeMesh) => {
+        mesh_ary.splice(mesh_ary.indexOf(cubeMesh), 1);
+        scene.remove(cubeMesh);
+    }
+
+    const addTouchArea = (x_loc) => {
+        const cube = new THREE.CubeGeometry( x_distance + 2, 0.5, 0.15);
+        const material = new THREE.MeshBasicMaterial( { color: 0xe5d8d1 } );
+        // const material = new THREE.MeshBasicMaterial( { color: 0xb9aea9 } );
+        let touchArea = new THREE.Mesh( cube, material );
+        touchArea.position.set(x_loc, hit_point, 14.7);
+        scene.add( touchArea );
+        return touchArea;
+    };
+
+    const touchLeftArea = addTouchArea(-(x_distance));
+    const touchRightArea = addTouchArea(x_distance);
+
+    // 動畫設置------------------------------------------------
+
+    let isRecord;
+    const CubeAnimation = () => {
+        for(let i = 0; i<mesh_ary.length; i++){
+            const cubeMesh = mesh_ary[i];
+            const isArrival = isCrash(cubeMesh);
+            const {templeTime, direction} = cubeMesh;
+            cubeMesh.isArrival = isArrival;
+            if(isArrival){
+                if((cubeMesh.direction == 0) && (leftStatus)){
+                    console.log('get score')
+                    removeCube(cubeMesh);
+                    user.correct_hit.left += 1;
+                    cube_count += 1;
+                    LabelAnimation(success_label);
+                    addTempleJSON(cube_count,templeTime,direction, 1);
+                    isRecord = true;
+                }
+                if((cubeMesh.direction == 1) && (rightStatus)){
+                    console.log('get score')
+                    removeCube(cubeMesh);
+                    user.correct_hit.right += 1;
+                    cube_count += 1;
+                    LabelAnimation(success_label);
+                    addTempleJSON(cube_count,templeTime,direction, 1);
+                    isRecord = true;
+                }
+            }
+            if(cubeMesh.position.y >= terminal_point - 2){
+                if(cubeMesh.direction == 0){
+                    user.fail_hit.left += 1;
+                }else{
+                    user.fail_hit.right += 1;
+                }
+                console.log('fail')
+                cube_count += 1;
+                LabelAnimation(fail_label);
+                addTempleJSON(cube_count,templeTime,direction, 2);
+                isRecord = true;
+                removeCube(cubeMesh);
+            }
+            cubeMesh.position.y += 0.5;
+        }
+        if(!isRecord) {
+            if((leftStatus) || (rightStatus)){
+                if(!audioCurrectSec) return;
+                let direction = leftStatus ? 0: 1;
+                isRecord = true;
+                cube_count += 1;
+                console.log('unnessary step');
+                addTempleJSON(cube_count,audioCurrectSec,direction, 3);
+            }
+        }
+        
+    }
+
+
+    const LabelAnimation = (label_item) =>{
+        label_item.classList.add('show');
+        setTimeout(()=>{
+            label_item.classList.remove('show');
+        }, 200)
+    }
+
+    // 偵測碰撞-------------------------------------------------
+    
+    const isCrash = (cube) => {
+        const {x, y, z} = cube.position;
+        const line_y = hit_point;
+        const limit = 2;
+        const lower_limit = line_y - limit;
+        const upper_limit = line_y + limit;
+        if(( y >= lower_limit ) && (y <= upper_limit) ){
+            return true
+        }
+        return false;
+    };
+
+    // 資料儲存------------------------------------------------
+
+    const exportCSV = (json, titleAry) =>{
+        const titleStr = titleAry.join() + '\n';
+        let str = titleStr;
+        for(let i = 0 ; i < json.length ; i++ ){
+            for(let item in json[i]){
+                str+=`${json[i][item] + '\t'},`;     
+            }
+            str+='\n';
+        }
+        const uri = 'data:text/csv;charset=utf-8,\ufeff' + encodeURIComponent(str);
+        const link = document.createElement("a");
+        link.href = uri;
+        link.download =  "report.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    const addTempleJSON = (step_count, time, whichFoot, scoreStatus) => {
+        const data = {
+            step_count,
+            time: time,
+            whichFoot: whichFoot,
+            scoreStatus: scoreStatus
+        }
+        temple_report.push(data);
+    }
+
+    // 音效設定
+
+    const playDrum = () => {
+        const audio = document.querySelector('#audio_drum');
+        audio.currentTime = 0;
+        audio.play();
+    }
+
+    // 事件偵測------------------------------------------------
+
+    let longPress = false;
+    const keydownEvent = (e) => {
+        const keyCode = e.keyCode;
+        const touchAreaColor = [0.7254901960784313, 0.6823529411764706, 0.6627450980392157]
+        if(longPress) return;
+        if(leftStatus || rightStatus){
+            longPress = true;
+            keyupEvent(keyCode);
+            return;
+        }
+        if((keyCode == 49)||(keyCode == 35)){
+            playDrum();
+            changeTouchAreaColor(touchLeftArea, touchAreaColor);
+            user.total_hit.left += 1;
+            leftStatus = true;
+            isRecord = false;
+        };
+        if((keyCode == 50)||(keyCode == 40)){
+            playDrum();
+            changeTouchAreaColor(touchRightArea, touchAreaColor);
+            user.total_hit.right += 1;
+            rightStatus = true;
+            isRecord = false;
+        };
+    };
+
+    const keyupEvent = (e) => {
+        const type = typeof(e);
+        const keyCode = type == 'number' ? e : e.keyCode;
+        const touchAreaColor = [0.8980392156862745, 0.8470588235294118, 0.8196078431372549];
+        if(type == 'object') longPress = false;
+        if((keyCode == 49)||(keyCode == 35)){
+            leftStatus = false;
+            changeTouchAreaColor(touchLeftArea, touchAreaColor);
+        };
+        if((keyCode == 50)||(keyCode == 40)){
+            rightStatus = false;
+            changeTouchAreaColor(touchRightArea, touchAreaColor);
+        };
+    }
+
+    window.addEventListener(('keydown'), keydownEvent);
+    window.addEventListener(('keyup'), keyupEvent);
+
+    // 按鈕偵測
+    const desc_btn = document.querySelector('.desc_btn');
+    const desc_close = document.querySelector('.desc_close');
+    
+
+    const showBoard = (showEl) => {
+        showEl = document.querySelector('.' + showEl);
+        showEl.classList.remove('hide');
+    }
+
+    const hideBoard = (hideEl) => {
+        hideEl = document.querySelector('.' + hideEl);
+        hideEl.classList.add('hide');
+    }
+
+    desc_btn.addEventListener('click', ()=> showBoard("game_desc") );
+    desc_close.addEventListener('click', () => hideBoard("game_desc"));
+
+   
+
+    // 通用函式------------------------------------------------
+
+    const randomDirection = () =>{
+        let direction = Math.floor(Math.random() * 2);
+        return direction;
+    };
+
+    const generateCube = (templeTime) => {
+        let direction = randomDirection();
+        if(direction === 0){
+            addCube(x_distance, 0xe52d30, templeTime);
+        }else{
+            addCube(-(x_distance), 0xffc107, templeTime);
+        };
+    }
+
+    const changeTouchAreaColor = (mesh, colorAry) => {
+        const [ r, g, b ] = colorAry;
+        mesh.material.color.r = r;
+        mesh.material.color.g = g;
+        mesh.material.color.b = b;
+    }
+
+    const getDurationTime = () => {
+        const duration_sec = audio.duration;
+        const min = Math.floor(duration_sec / 60);
+        const sec = Math.floor(duration_sec % 60);
+        if(min){
+            return `${min}分 ${sec}秒`;
+        }
+        return `${min}分 ${sec}秒`
+    }
+
+    const writeDomText = (className, text) =>{
+        const domEl = document.querySelector('.' + className);
+        domEl.innerHTML = text;
+    };
+
+    const countScore = () => {
+        writeDomText('total_score', user.total_success());
+        writeDomText('total_success_count', user.total_success());
+        writeDomText('total_miss_count', user.total_miss());
+        writeDomText('total_step_count', user.total_step());
+        writeDomText('total_hit_rate', user.total_hit_rate());
+        writeDomText('left_hit_rate', user.left_hit_rate());
+        writeDomText('right_hit_rate', user.right_hit_rate());
+        writeDomText('left_step_count', user.total_hit.left);
+        writeDomText('right_step_count', user.total_hit.right);
+        writeDomText('left_success_count', user.correct_hit.left);
+        writeDomText('right_success_count', user.correct_hit.right);
+        writeDomText('left_miss_count', user.fail_hit.left);
+        writeDomText('right_miss_count', user.fail_hit.right);
+        writeDomText('total_game_time', getDurationTime());
+
+    };
+
+    // 結束畫面
+
+    const gameOverScene = () => {
+        const gameOver  = document.querySelector('.game_over');
+        countScore();
+        exportCSV(temple_report, ['流水號,踩的時間, 哪隻腳,是否得分'])
+        setTimeout(() => {
+            gameOver.classList.remove('hide');
+        }, 100);
+    }
+
+    // 音樂設置------------------------------------------------
+
+    const tempo =  [
+        "2.1",
+        "3.8",
+        "5.1",
+        "6.7",
+        "7.9",
+        "9.0",
+        "10.3",
+        "11.7",
+        "12.7",
+        "13.9",
+        "15.4",
+        "16.4",
+        "17.3",
+        "18.1",
+        "19.1",
+        "20.9",
+        "21.8",
+        "22.9",
+        "23.9",
+        "24.8",
+        "25.7",
+        "26.6",
+        "27.5",
+        "28.5",
+        "29.4",
+        "30.3",
+        "31.2",
+        "31.8",
+        "32.8",
+        "33.3",
+        "34.1",
+        "35.3",
+        "36.1",
+        "37.9",
+        "38.9",
+        "39.8",
+        "40.7",
+        "41.9",
+        "43.6",
+        "44.5",
+        "45.5",
+        "46.5",
+        "47.4",
+        "48.3",
+        "49.2",
+        "50.1",
+        "51.1",
+        "52.0",
+        "53.1",
+        "54.9",
+        "55.8",
+        "56.9",
+        "57.9",
+        "59.2",
+        "60.9",
+        "61.9",
+        "62.3",
+        "63.3",
+        "64.2",
+        "65.2",
+        "66.1",
+        "67.3",
+        "68.6",
+        "69.4",
+        "70.3",
+        "71.3",
+        "73.5",
+        "74.6",
+        "75.5",
+        "76.4",
+        "77.1",
+        "78.7",
+        "79.7",
+        "80.6",
+        "81.5",
+        "82.5",
+        "83.5",
+        "84.4",
+        "85.3",
+        "86.2",
+        "87.2",
+        "88.1",
+        "89.9",
+        "90.9",
+        "91.8",
+        "92.8",
+        "93.7",
+        "94.6",
+        "95.9",
+        "96.8",
+        "97.1",
+        "98.0",
+        "99.6",
+        "100.6",
+        "101.7",
+        "102.9",
+        "103.8",
+        "104.8",
+        "105.9",
+        "106.9",
+        "107.3",
+        "108.2",
+        "109.1",
+        "110.1",
+        "111.3",
+        "112.1",
+        "113.9",
+        "114.8",
+        "115.8",
+        "116.9",
+        "117.7",
+        "118.8",
+        "119.8",
+        "120.6",
+        "121.6",
+        "122.3",
+        "123.8",
+        "124.7",
+        "125.6",
+        "126.5",
+        "127.5",
+        "128.5",
+        "129.5",
+        "130.7",
+        "131.7",
+        "132.6",
+        "133.6",
+        "134.6",
+        "135.5",
+        "136.5",
+        "137.5",
+        "138.6",
+        "139.6",
+        "140.6",
+        "141.9",
+        "142.6",
+        "143.5",
+        "144.7",
+        "145.7",
+        "146.6",
+        "147.6",
+        "148.5",
+        "149.6",
+        "150.5",
+        "151.4",
+        "151.6",
+        "152.5",
+        "153.6",
+        "154.6",
+        "155.6",
+        "156.4",
+        "157.7",
+        "158.4",
+        "159.4",
+        "160.4",
+        "160.7",
+        "161.6",
+        "162.5",
+        "163.5",
+        "164.4",
+        "164.6",
+        "165.4",
+        "166.3",
+        "167.2",
+        "168.0",
+        "169.6",
+        "170.6",
+        "171.4",
+        "172.4",
+        "173.4",
+        "174.3",
+        "175.1",
+        "176.7",
+        "177.7",
+        "178.6",
+        "179.4",
+        "180.3",
+        "181.3",
+        "183.8",
+        "184.6",
+        "185.0",
+        "185.3"
+    ]
+
+    const audio = document.getElementById("audio-element");
+    let timer;
+
+    const audioStart = () => {
+        timer = setInterval(() => {
+            const playingStatus =  isPlaying();
+            if(playingStatus){
+                playing(audio.currentTime);
+            }
+        }, 100);
+    }
+
+    const audioEnd = () => {
+        console.log("end");
+        clearInterval(timer);
+        gameOverScene();
+    }
+
+    let audioCurrectSec;
+    const playing = (currentSec) =>{
+        audioCurrectSec = currentSec.toFixed(2);
+        const currentTime = (currentSec).toFixed(1);
+        const showCubeTime = (currentSec + 1.5).toFixed(1);
+        if(tempo.includes(showCubeTime)){
+            generateCube(audioCurrectSec);
+        }
+    };
+    
+
+    const isPlaying = () => { return !audio.paused; }
+
+    const startGame = () => {
+        document.querySelector('.game_start').style.display = 'none';
+        audio.play();
+    }
+
+    audio.addEventListener("play", audioStart);
+    audio.addEventListener("ended", audioEnd);
+    start_btn.addEventListener('click', startGame);
+
+    // 更新動畫------------------------------------------------
+
+    // .... setup some lighting
+    const dirLight = new THREE.DirectionalLight(0xffffff, .5);
+    dirLight.position.set(1, 5, 3);
+    scene.add(dirLight, new THREE.AmbientLight(0xffffff));
+    // .... setup and run demo-code
+    const update = init(scene, camera);
+
+    setInterval(()=>{
+        requestAnimationFrame(loop);
+        CubeAnimation();
+    }, 30)
+
+    function loop(time) {
+        if (update) { update(time); }
+        renderer.render(scene, camera);
+    };
+    
+    // .... bind events
+    window.addEventListener('resize', ev => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    });
+
+    
+    main.appendChild(renderer.domElement);
+
+
+</script>
+
+</html>
