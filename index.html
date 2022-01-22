@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
-    <title>Document</title>
+    <title>節奏遊戲</title>
     <link rel="stylesheet" href="./css/all.css">
     
 </head>
@@ -14,7 +14,6 @@
         <header class="header">
             <audio id="audio-element" src="https://raw.githubusercontent.com/himalayasingh/music-player-1/master/music/2.mp3" style="width: 500px"></audio>
             <audio id="audio_drum" src="./asset/audio/vintage-pack-tom_G_minor.wav"></audio>
-            <!-- <p class="game_score">0</p> -->
         </header>
         <div class="game_start">
             <h1>節奏遊戲</h1>
@@ -24,7 +23,7 @@
             </div>
             <div class="game_desc hide">
                 <h2>遊戲說明</h2>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequatur fugit voluptate iste necessitatibus culpa ipsum repellendus porro vero accusamus? Aliquid, enim dignissimos suscipit blanditiis illo ratione sint, dolorum autem nesciunt facere adipisci! Consequuntur ab voluptates tenetur ad voluptatum obcaecati animi enim a laudantium. Qui sed eos earum deleniti! Sit, placeat.</p>
+                <p>進入遊戲畫面按下「Start」按鍵後，遊戲將會開始播放音樂並且隨著節奏出現紅色及黃色方塊，使用者需在方塊到達打擊區域時，踩下該方塊相對應方向的腳步（紅色為左腳；黃色為右腳）</p>
                 <a href="#" class="desc_close">
                     <i class="fas fa-times"></i>
                 </a>
@@ -32,6 +31,7 @@
         </div>
         <p class="fail_label hit_label">miss</p>
         <p class="success_label hit_label">success</p>
+        <p class="total_score_num hide">0</p>
         <div class="game_over hide">
             <h2>總分: <span class="total_score">0</span></h2>
             <ul class="score_row">
@@ -160,8 +160,6 @@
             vertexLines.push(buildVertexLine());
         }
 
-        // join the lines to pairs, each pair will create a row of hexagons
-        // (could be removed for optimization)
         const linePairs = [];
         for (let ri = 0; ri < params.height; ri++) {
             linePairs.push([
@@ -169,9 +167,6 @@
             vertexLines[(ri)]
             ]);
         }
-
-        // iterate over the pairs of lines and create the filling hexagons between
-        // each pair
         const rowGroups = [];
         for (let i = 0; i < linePairs.length; i++) {
             const [line0, line1] = linePairs[i];
@@ -272,28 +267,16 @@
             Math.floor(row / 2) * params.yStep1;
     }
 
-
-
-    // ---- boilerplate-code
-
-    // .... setup renderer
     const renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
     renderer.domElement.id = "mainScene";
     renderer.setSize(window.innerWidth, window.innerHeight);
-    // renderer.setClearColor(0x1d4167, 1);
-    // .... setup scene
-    const scene = new THREE.Scene();
-    
-    // scene.fog = new THREE.FogExp2(0xffffff, .03);
 
-    // .... setup camera and controls
+    const scene = new THREE.Scene();
+
     const camera = new THREE.PerspectiveCamera(
         110, window.innerWidth / window.innerHeight, 1, 1000);
     // const controls = new OrbitControls(camera, renderer.domElement);
-    
-    
 
-    // camera.position.set(0, 4, 20);
     camera.position.set(0, 50, 0);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
 
@@ -324,7 +307,6 @@
     const addTouchArea = (x_loc) => {
         const cube = new THREE.CubeGeometry( x_distance + 2, 0.5, 0.15);
         const material = new THREE.MeshBasicMaterial( { color: 0xe5d8d1 } );
-        // const material = new THREE.MeshBasicMaterial( { color: 0xb9aea9 } );
         let touchArea = new THREE.Mesh( cube, material );
         touchArea.position.set(x_loc, hit_point, 14.7);
         scene.add( touchArea );
@@ -352,6 +334,7 @@
                     LabelAnimation(success_label);
                     addTempleJSON(cube_count,templeTime,direction, 1);
                     isRecord = true;
+                    writeDomText('total_score_num', user.total_success());
                 }
                 if((cubeMesh.direction == 1) && (rightStatus)){
                     console.log('get score')
@@ -361,6 +344,7 @@
                     LabelAnimation(success_label);
                     addTempleJSON(cube_count,templeTime,direction, 1);
                     isRecord = true;
+                    writeDomText('total_score_num', user.total_success());
                 }
             }
             if(cubeMesh.position.y >= terminal_point - 2){
@@ -804,6 +788,7 @@
 
     const startGame = () => {
         document.querySelector('.game_start').style.display = 'none';
+        document.querySelector('.total_score_num').classList.remove('hide');
         audio.play();
     }
 
