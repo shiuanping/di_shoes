@@ -70,8 +70,31 @@
     <!-- <input type="file" name="inputfile" id="inputfile"> -->
 </body>
 <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-analytics.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+  
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyBNOFjkX0llwhi1kh-K3WHmvdPv-5u-Gpo",
+      authDomain: "di-shoes.firebaseapp.com",
+      projectId: "di-shoes",
+      storageBucket: "di-shoes.appspot.com",
+      messagingSenderId: "19544369523",
+      appId: "1:19544369523:web:ecdee53c021efcd5817d06",
+      measurementId: "G-ZLQPEQ6TNB"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+<script type="module">
     import * as THREE from "https://cdn.skypack.dev/three@0.120.0";
-    import {OrbitControls} from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
+    // import {OrbitControls} from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
 
     const main = document.querySelector('.main');
     const fail_label = document.querySelector('.fail_label');
